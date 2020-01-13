@@ -1,0 +1,21 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t strangerman/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true strangerman/react-test npm run test
+
+after_success:
+  - docker build -t strangerman/multi-client ./client
+  - docker build -t strangerman/multi-nginx ./nginx
+  - docker build -t strangerman/multi-server ./server
+  - docker build -t strangerman/multi-worker ./worker
+# Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push strangerman/multi-client
+  - docker push strangerman/multi-nginx
+  - docker push strangerman/multi-server
+  - docker push strangerman/multi-worker
